@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>ERROR 404를 피하라!</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      align-items: center;
+      min-height: 100%;
+      background: #0f0f23;
+      background-image:
+        linear-gradient(rgba(0,0,0,0.3) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,0,0,0.3) 1px, transparent 1px);
+      background-size: 8px 8px;
+      font-family: 'Press Start 2P', 'Courier New', monospace;
+      color: #e0e0e0;
+      padding-top: env(safe-area-inset-top);
+      padding-bottom: env(safe-area-inset-bottom);
+      overflow-x: hidden;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+    }
+
+    .header {
+      flex-shrink: 0;
+      text-align: center;
+      padding: 20px 12px 16px;
+      padding-top: max(20px, env(safe-area-inset-top));
+    }
+
+    h1 {
+      margin-bottom: 12px;
+      font-size: clamp(0.7rem, 3vw, 1rem);
+      font-weight: 400;
+      color: #ff4444;
+      text-shadow: 3px 3px 0 #8b0000;
+      line-height: 1.6;
+    }
+
+    .info {
+      margin-bottom: 8px;
+      font-size: clamp(0.5rem, 2vw, 0.65rem);
+      color: #88ff88;
+      text-shadow: 2px 2px 0 #006600;
+      line-height: 1.8;
+    }
+
+    .picks-count {
+      margin-bottom: 12px;
+      font-size: clamp(0.45rem, 1.8vw, 0.6rem);
+      color: #ffff88;
+    }
+
+    .game-wrapper {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+      max-width: 100vw;
+      padding: 8px 12px 20px;
+      overflow-y: auto;
+    }
+
+    /* 3x4 그리드, 화면 중앙 꽉 차게 */
+    .game-board {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(4, 1fr);
+      gap: 10px;
+      width: 100%;
+      max-width: min(420px, 92vw);
+      height: min(70vh, 520px);
+      max-height: min(70vh, 520px);
+    }
+
+    .card {
+      min-height: 0;
+      perspective: 600px;
+      cursor: pointer;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+    }
+
+    .card-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      min-height: 60px;
+      transition: transform 0.25s ease;
+      transform-style: preserve-3d;
+    }
+
+    .card.flipped .card-inner {
+      transform: rotateY(180deg);
+    }
+
+    .card.disabled {
+      pointer-events: none;
+      opacity: 0.9;
+    }
+
+    .card-face {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      border-radius: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 400;
+      overflow: hidden;
+      border: 4px solid #2a2a2a;
+      box-shadow:
+        4px 4px 0 #1a1a1a,
+        inset 3px 3px 0 rgba(255,255,255,0.15);
+      font-family: 'Press Start 2P', monospace;
+    }
+
+    .card-back {
+      background: #4a4aff;
+      border-color: #2a2a2a;
+    }
+
+    .card-back::before {
+      content: '?';
+      font-size: clamp(1rem, 4vw, 1.5rem);
+      color: #fff;
+      text-shadow: 3px 3px 0 #2a2a2a;
+      z-index: 1;
+    }
+
+    .card-front {
+      transform: rotateY(180deg);
+    }
+
+    .card-front.enter {
+      background: #00aa00;
+      border-color: #2a2a2a;
+      color: #fff;
+      font-size: clamp(0.45rem, 2vw, 0.6rem);
+      text-shadow: 2px 2px 0 #006600;
+    }
+
+    .card-front.enter::before {
+      content: 'ENTER';
+      z-index: 1;
+    }
+
+    .card-front.bang {
+      flex-direction: column;
+      gap: 2px;
+      background: #2a0a0a;
+      border-color: #ff4444;
+      color: #ff4444;
+      padding: 8%;
+      font-size: clamp(0.4rem, 1.8vw, 0.55rem);
+    }
+
+    .card-front.bang .error-404 {
+      font-size: clamp(0.6rem, 2.5vw, 0.85rem);
+      color: #ff4444;
+      text-shadow: 2px 2px 0 #8b0000;
+      animation: errorBlink 0.8s ease infinite;
+      line-height: 1.4;
+    }
+
+    .card-front.bang .error-icon {
+      width: 16px;
+      height: 16px;
+      margin-top: 2px;
+      image-rendering: pixelated;
+    }
+
+    @keyframes errorBlink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .btn-restart {
+      margin-top: 20px;
+      padding: 12px 24px;
+      font-size: clamp(0.45rem, 2vw, 0.6rem);
+      font-family: 'Press Start 2P', monospace;
+      border: 4px solid #2a2a2a;
+      border-radius: 0;
+      background: #8844ff;
+      color: #fff;
+      cursor: pointer;
+      box-shadow: 4px 4px 0 #2a2a2a;
+      transition: transform 0.1s, box-shadow 0.1s;
+      text-shadow: 2px 2px 0 #330066;
+    }
+
+    .btn-restart:hover {
+      transform: translate(2px, 2px);
+      box-shadow: 2px 2px 0 #2a2a2a;
+    }
+
+    .btn-restart:active {
+      transform: translate(4px, 4px);
+      box-shadow: 0 0 0 #2a2a2a;
+    }
+
+    .message {
+      margin-top: 16px;
+      font-size: clamp(0.45rem, 2vw, 0.6rem);
+      min-height: 2em;
+      line-height: 1.8;
+      text-align: center;
+    }
+
+    .message.win {
+      color: #88ff88;
+      text-shadow: 2px 2px 0 #006600;
+    }
+
+    .message.lose {
+      color: #ff6666;
+      text-shadow: 2px 2px 0 #8b0000;
+    }
+
+    @media (max-width: 768px) {
+      .header { padding: 12px 8px 10px; }
+      .game-board {
+        height: min(65vh, 480px);
+        gap: 8px;
+        max-width: 96vw;
+      }
+      .card-face { border-width: 3px; }
+    }
+
+    @media (max-width: 380px) {
+      .game-board {
+        height: min(60vh, 400px);
+        gap: 6px;
+      }
+    }
+
+    @media (hover: none) {
+      .card { min-height: 50px; }
+      .btn-restart { min-height: 44px; min-width: 100px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>ERROR 404를 피하라!</h1>
+    <p class="info">ENTER 카드 3장을 고르면 성공!</p>
+    <p class="picks-count" id="picksCount">선택: 0 / 3</p>
+  </div>
+  <div class="game-wrapper">
+    <div class="game-board" id="gameBoard"></div>
+    <p class="message" id="message"></p>
+    <button class="btn-restart" id="btnRestart">다시 하기</button>
+  </div>
+
+  <script>
+    const CARD_TYPES = {
+      ENTER: 'enter',
+      BANG: 'bang'
+    };
+
+    const cards = [
+      ...Array(9).fill(CARD_TYPES.ENTER),
+      ...Array(3).fill(CARD_TYPES.BANG)
+    ];
+
+    let gameState = [];
+    let flippedCount = 0;
+    let gameOver = false;
+
+    function shuffle(array) {
+      const arr = [...array];
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    function createCard(type, index) {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.dataset.index = index;
+      const frontContent = type === 'bang'
+        ? '<span class="error-404">ERROR 404</span><svg class="error-icon" viewBox="0 0 24 24" fill="none" stroke="#ff4444" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>'
+        : '';
+      card.innerHTML = `
+        <div class="card-inner">
+          <div class="card-face card-back"></div>
+          <div class="card-face card-front ${type}">${frontContent}</div>
+        </div>
+      `;
+      return card;
+    }
+
+    function initGame() {
+      const board = document.getElementById('gameBoard');
+      const messageEl = document.getElementById('message');
+      const picksEl = document.getElementById('picksCount');
+      board.innerHTML = '';
+      messageEl.textContent = '';
+      messageEl.className = 'message';
+      picksEl.textContent = '선택: 0 / 3';
+      gameOver = false;
+      flippedCount = 0;
+
+      gameState = shuffle(cards);
+      gameState.forEach((type, i) => {
+        const card = createCard(type, i);
+        card.addEventListener('click', () => handleCardClick(i));
+        board.appendChild(card);
+      });
+    }
+
+    function updatePicksCount() {
+      document.getElementById('picksCount').textContent = `선택: ${flippedCount} / 3`;
+    }
+
+    function handleCardClick(index) {
+      if (gameOver) return;
+      if (flippedCount >= 3) return;
+
+      const card = document.querySelector(`.card[data-index="${index}"]`);
+      if (card.classList.contains('flipped')) return;
+
+      card.classList.add('flipped');
+      flippedCount++;
+      updatePicksCount();
+
+      const type = gameState[index];
+
+      if (type === CARD_TYPES.BANG) {
+        gameOver = true;
+        document.getElementById('message').textContent = 'ERROR 404! 실패! 😵';
+        document.getElementById('message').className = 'message lose';
+        document.querySelectorAll('.card').forEach(c => c.classList.add('disabled'));
+      } else if (flippedCount === 3) {
+        gameOver = true;
+        document.getElementById('message').textContent = '성공! ERROR를 피했어요! 🎉';
+        document.getElementById('message').className = 'message win';
+        document.querySelectorAll('.card').forEach(c => c.classList.add('disabled'));
+      }
+    }
+
+    document.getElementById('btnRestart').addEventListener('click', initGame);
+    initGame();
+  </script>
+</body>
+</html>
